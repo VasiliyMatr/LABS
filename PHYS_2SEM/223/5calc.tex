@@ -14,7 +14,7 @@
 
     \begin{table}[h!]
     	\begin{center}
-    		\caption*{\color[HTML]{000000}Таблица 2: Значения угловых к-тов и значения R(0) для графика R(Q)}
+    		\caption*{\color[HTML]{000000}Таблица 2: Значения угловых к-тов \mth{\frac{dR}{dQ}} и значения R(0) для графика R(Q)}
     		\begin{tabular}{|P{3cm}|P{1.3cm}|P{1.3cm}|P{1.3cm}|P{1.3cm}|P{1.3cm}|}
     		\hline
 
@@ -47,4 +47,34 @@
 
 \newpage
 
-\subsection{}
+\subsection{Вычисление к-та теплопроводности при разных температурах термостата }
+
+Из формулы (\ref{finalQ}) получил следующую формулу для расчета к: \\[0.2cm] 
+
+\noindent\mth{k = \frac{\frac{dQ}{dR}\frac{dR}{dT}\,\cdot\, ln\frac{r_0}{r_1}}{2\pi L}} \\[0.2cm]
+
+\noindent\mth{T_0} - Температура термостата; k - Значение теплопроводности. Результаты расчетов представлены в Таблице 3:
+
+\begin{table}[h!]
+    \begin{center}
+        \caption*{\color[HTML]{000000}Таблица 3: к (T\mth{_0})}
+        \begin{tabular}{|P{3cm}|P{1.3cm}|P{1.3cm}|P{1.3cm}|P{1.3cm}|P{1.3cm}|}
+        \hline
+
+            \mth{T_0, ^\circ C}    		         & 25,4  & 30,2  & 40,1  & 50,4  & 60,4 \\  
+            \hline
+            \mth{k, \frac{\text{Ом}}{\text{м}K} \cdot 10^{-2}} & 2,67 & 2,78 & 2,96 & 2,92 & 3,04 \\
+
+        \hline    		
+        \end{tabular}
+    \end{center}
+\end{table}
+
+\subsection{График к(T)}
+
+Пользуясь значениями из предыдущего пункта построил график к(T).\linebreak График представлен на рис. 5. \\
+
+\begin{center}
+    \includegraphics[scale = 1.0]{picks/223_k(T).png} \\
+    \textit{\textcolor[HTML]{000000}{Рис. 5. k(t)}}
+\end{center} 
