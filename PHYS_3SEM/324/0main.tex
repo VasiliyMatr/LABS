@@ -1,0 +1,130 @@
+\documentclass[11pt,a4paper,oneside]{article} % dock basic params
+
+% ---------------- PACKAGES ---------------- %
+
+% Ru lang stuff
+    \usepackage[utf8x]{inputenc}
+    \usepackage[T2A]{fontenc}
+
+% running titles
+    \usepackage{fancybox}
+    \usepackage{fancyhdr}
+
+% for last page number
+    \usepackage{lastpage}
+
+% for colored tablets cells
+    \usepackage{colortbl}
+
+% for Ru text in formulas
+    \usepackage[warn]{mathtext}
+
+% for captions
+    \usepackage[labelsep=period]{caption}
+
+% for colored hyperrefs
+    \usepackage{xcolor}
+    \usepackage{hyperref}
+
+% for pictures
+    \usepackage{graphicx}
+
+% for coll math
+    \usepackage{amsmath}
+
+% path to all pictures
+    \graphicspath{picks/}
+
+% for enumerates
+    \usepackage[shortlabels]{enumitem}
+
+% for custom running titles
+    \usepackage{ifthen}
+    \usepackage{pdfpages}
+    \usepackage[strict]{changepage}
+
+% for simple drawings
+    \usepackage{tikz}
+    \usetikzlibrary{calc}
+    \usetikzlibrary{decorations.pathmorphing}
+
+% for good-styled text in tablets
+    \usepackage{array}
+    \newcolumntype{P}[1]{>{\centering\arraybackslash}p{#1}}
+
+% dock fields & sizes
+    \usepackage[left=12mm, top=12mm, right=15mm, bottom=28mm, nohead, footskip=10mm]{geometry}
+
+% for multirows in tables
+    \usepackage{multirow}
+
+% ---------------- SOME USEFUL MACROS ---------------- %
+
+% for shifted mini pages
+    \newcommand{\shiftedText}[3]{
+    \hspace*{#1}\begin{minipage}[t]{#2}
+        #3
+    \end{minipage}
+    }
+
+% lab num
+    \newcommand{\labnum}{
+        LAB\_NUM
+    }
+
+% lab name
+    \newcommand{\labname}{
+        LAB\_NAME
+    }
+
+% lab objective
+    \newcommand{\labobj}{
+        LAB\_OBJECTIVE
+    }
+
+% lab equipment
+    \newcommand{\labequ}{
+        LAB\_EQUIPMENT
+    }
+
+% ---------------- PAGES STYLE & FORMATTING ---------------- %
+
+% page style setup (for running titles)
+    \fancypagestyle{plain}{
+        \fancyhf{} % remove everything
+
+         % lines parameters
+        \renewcommand{\headrulewidth}{0pt}
+        \renewcommand{\footrulewidth}{0pt}
+
+        % running titles contents
+        \fancyfoot[L]{\ifthenelse{\isodd{\thepage}}{Работа \labnum}{\thepage}}
+        \fancyfoot[R]{\ifthenelse{\isodd{\thepage}}{\thepage}{Работа \labnum}}
+    }
+
+% choosing page style with our running titles
+    \pagestyle{plain}
+
+% to have line breaks without sizes excess
+    \tolerance = 10000
+
+% ---------------- DOC BODY ---------------- %
+
+\begin{document}
+    % some text placement parameters
+        \textheight = 240mm
+        \footskip = 10mm
+        \leftskip = 10mm
+
+    % add title page
+        \include{1title}
+
+    % fixing running titles shifts after title page
+        \headheight = 0.5cm
+        \headsep = 1.2cm
+
+    % other files includes
+        \include{2theory}
+        \include{3experement}
+
+\end{document}
