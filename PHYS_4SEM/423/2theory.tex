@@ -1,0 +1,84 @@
+
+% Theory part goes here %
+
+% for numerated formulas
+\newcommand{\formula}[2]
+{
+    \begin{equation}\label{#1}
+        #2
+    \end{equation}
+}
+
+
+% for in-text math formulas
+\newcommand{\mth}[1]
+{
+    \begin{math}
+        #1
+    \end{math}
+}
+
+% for rus letters in indexes
+\newcommand{\ruB}[1]
+{
+    _{\text{#1}}
+}
+
+\newcounter{PicsCounter}
+\setcounter{PicsCounter}{1}
+
+\newcommand{\pic}[3]{
+    \begin{center}
+    \begin{minipage}[h!]{#1}
+    \begin{center}
+
+    \includegraphics[width = \textwidth]{#2}
+    \textit{Рис \arabic{PicsCounter}. #3}
+
+    \end{center}
+    \end{minipage}
+    \end{center}
+
+    \stepcounter{PicsCounter}
+}
+
+\section{Схема установки}
+
+Интерферометер Релея --- прибор для измерения разности показателей преломления --- основан
+на явлении дифракции света на двух параллельных щелях. Схема установки представлена на
+рисунке 1 в вертикальной и горизонтальных проекциях.
+
+\pic{0.7\linewidth}{scheme.jpg}{Схема установки: а) вид сверху; б) вид сбоку}
+
+\section{Теория}
+
+Формула для рассчета изменения n:
+\formula
+{ deltaN }
+{ \Delta n = \frac{\Delta}{l} = m \frac{\lambda}{l} }
+
+\noindentПоказатель преломления исследуемого газа определяется путем сравнения с воздухом:
+\formula
+{ nAir }
+{ n = n\ruB{возд} + \frac{\Delta}{l} }
+
+\noindentЗависимость показателя преломления газа от давления и температуры:
+\formula
+{ nFromPnT }
+{ n = \sqrt{\epsilon} = \sqrt{1 + 4\pi N \alpha} \approx 1 + 2\pi N \alpha }
+
+\noindentС учетом соотношения $ P = NkT $, получим:
+\formula
+{ nWithRelation }
+{ n - 1 = \frac{2\pi\alpha}{kT}P }
+
+\noindentТогда при постоянной температуре:
+\formula
+{ nWithConstT }
+{ \Delta n = \frac{2\pi\alpha}{kT}\Delta P }
+
+\noindentТогда связь для $ n $ и $ n_0 $:
+\formula
+{ nFinal }
+{ \frac{n_0 - 1}{n - 1} = \frac{TP_0}{T_0P} }
+
