@@ -1,0 +1,139 @@
+\documentclass[11pt,a4paper,oneside]{article} % dock basic params
+
+% Ru lang stuff
+    \usepackage [utf8x] {inputenc}
+    \usepackage [T2A] {fontenc}
+
+% running titles 
+    \usepackage{fancybox}
+    \usepackage{fancyhdr}
+    
+% for last page number
+    \usepackage{lastpage}
+
+%for colored tablets cells
+    \usepackage{colortbl}
+
+% for Ru text in formulas
+    \usepackage[warn]{mathtext}
+
+% for captions 
+    \usepackage[labelsep=period]{caption}
+
+% for colored hyperrefs
+    \usepackage{xcolor}
+    \usepackage{hyperref}
+    
+% for pictures 
+    \usepackage{graphicx}
+
+% for coll math
+    \usepackage{amsmath}
+
+% path to all pictures
+    \graphicspath{{picks/}}
+
+% for enumerates
+    \usepackage[shortlabels]{enumitem}
+
+% for diff running titles on pages with diff parity
+    \usepackage{ifthen}
+    \usepackage{pdfpages}
+    \usepackage[strict]{changepage}
+
+%for drawings
+    \usepackage{tikz}
+    \usetikzlibrary{calc}
+    \usetikzlibrary{decorations.pathmorphing}
+
+% for good text in tablets
+    \usepackage{array}
+    \newcolumntype{P}[1]{>{\centering\arraybackslash}p{#1}}
+    
+% dock fields 20 15 15 35
+    \usepackage[left=12mm, top=12mm, right=15mm, bottom=28mm, nohead, footskip=10mm]{geometry}
+    
+% for cool tables
+    \usepackage{multirow}
+
+
+% for different section/subsection/subsubsection styles in contents and doc
+
+        \newcommand{\sect}[2] {
+            \addtocounter{section}{1}
+            \section*{\Huge\thesection.\,#1}
+            \addcontentsline{toc}{subsection}{ \texorpdfstring{\thesection.\qquad\qquad #2}{Lg}}
+        }
+        
+        \newcommand{\subsec}[2] {
+            \addtocounter{subsection}{1}
+            \subsection*{\thesubsection.\,#1}
+            \addcontentsline{toc}{subsection}{ \texorpdfstring{\quad \thesubsection.\qquad\ #2}{Lg}}
+        }
+        
+        \newcommand{\subsubsec}[2] {
+            \addtocounter{subsubsection}{1}
+            \subsubsection*{\thesubsubsection.\,#1}
+            \addcontentsline{toc}{subsection}{ \texorpdfstring{\quad\quad\ \thesubsubsection. #2}{Lg}}
+        }
+%-------------------------------------------------------------------------%
+
+
+% for easy mini pages with shifts
+    \newcommand{\shiftedText}[3]{
+    \hspace*{#1}\begin{minipage}[t]{#2}
+        #3
+    \end{minipage}
+    }
+
+% for lab number change in all doc
+    \newcommand{\labnum}{
+        2.2.3
+    }
+
+% page style setup (for running titles)
+    \fancypagestyle{plain}{ %
+    	\fancyhf{} % remove everything
+    	
+    	 % lines parameters
+    	\renewcommand{\headrulewidth}{0pt}
+    	\renewcommand{\footrulewidth}{0pt}
+    	
+    	% running titles contents
+    	\fancyfoot[L]{\ifthenelse{\isodd{\thepage}}{Работа \labnum}{\thepage}}
+    	\fancyfoot[R]{\ifthenelse{\isodd{\thepage}}{\thepage}{Работа \labnum}}
+    }
+
+% choosing page style with our running titles
+    \pagestyle{plain}
+
+\tolerance = 10000
+
+% DOC BODY
+\begin{document}
+     % table of contents numeral depth
+	    \setcounter{tocdepth}{4}
+	
+	% all counters setup
+    	\setcounter{section}{0}
+    	\setcounter{subsection}{0}
+    	\setcounter{subsubsection}{0}
+    	
+    % some text placement parameters
+    	\textheight = 240mm
+    	\footskip = 10mm
+        \leftskip = 10mm
+    
+    % add title page
+    	\include{2_0title}
+    	
+    % fixing running titles shifts after title page
+    	\headheight = 0.5cm
+    	\headsep = 1.2cm
+    
+	% other file input
+    	\input{3formulas}
+    	\input{4experement}
+    	\input{5calc}
+
+\end{document}

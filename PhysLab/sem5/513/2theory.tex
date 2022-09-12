@@ -1,0 +1,110 @@
+
+% Theory part goes here %
+
+% for numerated formulas
+\newcommand{\formula}[2]
+{
+    \begin{equation}\label{#1}
+        #2
+    \end{equation}
+}
+
+% for in-text math formulas
+\newcommand{\mth}[1]
+{
+    \begin{math}
+        #1
+    \end{math}
+}
+
+% for rus letters in indexes
+\newcommand{\ruB}[1]
+{
+    _{\text{#1}}
+}
+
+\newcounter{PicsCounter}
+\setcounter{PicsCounter}{1}
+
+\newcommand{\pic}[3]{
+    \begin{center}
+        \begin{minipage}[h!]{#1}
+            \begin{center}
+
+                \includegraphics[width = \textwidth]{#2}
+                \textit{Рис \arabic{PicsCounter}. #3}
+
+            \end{center}
+        \end{minipage}
+    \end{center}
+
+    \stepcounter{PicsCounter}
+}
+
+\newcounter{TablesCounter}
+\setcounter{TablesCounter}{1}
+
+\newcommand{\tableLable}[1]{
+    \textit{Таблица \arabic{TablesCounter}: #1}
+
+    \stepcounter{TablesCounter}
+}
+
+\section{Теория}
+
+\subsection{Установка для измерения сечения рассеяния электронов в газах}
+
+Схема установки представлена на рисунке 1.
+
+\pic
+{0.8\linewidth}
+{scheme1.jpg}
+{Установка для измерения сечения рассеяния электронов в газах}
+
+\subsection{Теоретические выкладки}
+
+Для налетающего электрона выполняется закон сохранения энергии:
+
+\formula{EnergyConservationLaw}
+{E = \frac{mv^2}{2} = \frac{mv^{'2}}{2} + U}
+
+Следовательно, так как скорость электрона изменилась, то изменилась и длина его волны
+де Бройля. Следовательно атом ведет себя как преломляющая среда. Относительный
+показатель приломления:
+
+\formula{RefractionFactor}
+{n = \frac{\lambda}{\lambda^{'}} = \sqrt{1 - \frac{U}{E}}}
+
+Уравнение Шредингера для потенциальной ямы:
+
+\formula{SchrodingersEquation}
+{\psi^{''} + k^2\psi}
+
+При этом: $ k^2 = k_1^2 = \frac{2mE}{\hslash^2} $ для положения вне потенциальной ямы, и
+$ k^2 = k_2^2 = \frac{2m\left( E + U_0 \right)}{\hslash^2} $ для положения в области
+потенциальной ямы. \\
+
+Коэффициент прохождения:
+
+\formula{TransmissionCoefficient}
+{
+    D = \frac{16k_1^2k_2^2}
+        {16k_1^2k_2^2 + 4\left( k_1^2 - k_2^2 \right)^2\sin^2\left( k_2l \right)}
+}
+
+Тогда видно, что коэффициент прохождения максимален при условии:
+
+\formula{MaxTransmissionCoefficientCondition}
+{k_2l = \sqrt{\frac{2m\left( E + U_0 \right)}{\hslash^2}}l = n\pi \, , \quad n = 1,2,3 \, ...}
+
+Из рассуждений выше также получаем эффективный размер атома:
+
+\formula{EffectiveAtomSize}
+{l = \frac{h\sqrt{5}}{32m\left( E_2 - E_1 \right)}}
+
+При этом $ E_1 = eV_1 \, $, и $ E_2 = eV_2 \, $. \\
+
+Так же можно получить формулу для эффективной глубины потенциальной ямы атома:
+
+\formula{EffectivePotentialWellDepth}
+{U_0 = \frac{4}{5}E_2 = \frac{9}{5}E_1}
