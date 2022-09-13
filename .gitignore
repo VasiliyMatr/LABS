@@ -4,3 +4,4 @@
 *.fdb_latexmk
 *.out
 *.fls
+.ipynb_checkpoints
