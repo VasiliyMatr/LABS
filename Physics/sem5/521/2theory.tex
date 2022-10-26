@@ -1,0 +1,86 @@
+
+% Theory part goes here %
+
+% for numerated formulas
+\newcommand{\formula}[2]
+{
+    \begin{equation}\label{#1}
+        #2
+    \end{equation}
+}
+
+% for in-text math formulas
+\newcommand{\mth}[1]
+{
+    \begin{math}
+        #1
+    \end{math}
+}
+
+% for rus letters in indexes
+\newcommand{\ruB}[1]
+{
+    _{\text{#1}}
+}
+
+\newcounter{PicsCounter}
+\setcounter{PicsCounter}{1}
+
+\newcommand{\pic}[3]{
+    \begin{center}
+        \begin{minipage}[h!]{#1}
+            \begin{center}
+
+                \includegraphics[width = \textwidth]{#2}
+                \textit{Рис \arabic{PicsCounter}. #3}
+
+            \end{center}
+        \end{minipage}
+    \end{center}
+
+    \stepcounter{PicsCounter}
+}
+
+\newcounter{TablesCounter}
+\setcounter{TablesCounter}{1}
+
+\newcommand{\tableLable}[1]{
+    \textit{Таблица \arabic{TablesCounter}: #1}
+
+    \stepcounter{TablesCounter}
+}
+
+\section{Теория}
+
+\subsection{Принципиальная схема опыта Франка-Герца}
+
+Принципиальная схема представлена на рисунке 1.
+
+\pic
+{0.8\linewidth}
+{scheme1.jpg}
+{Принципиальная схема опыта Франка-Герца}
+
+\subsection{Теоретические выкладки}
+
+Одним из простых опытов, подтверждающих существование дискретных уровней энергии атомов,
+является эксперимент, известный под названием опыта Франка-Герца. \\
+
+Разреженный одноатомный газ (в нашем случае -- гелий) заполняет трёхэлектродную лампу.
+Электроны, испускаемые разогретым катодом, ускоряются в постоянном электрическом поле,
+созданным между катодом и сетчатым анодом лампы. Передвигаясь от катода к аноду, электроны
+сталкиваются с атомами гелия. \\
+
+При столкновении электрона с атомом газа возможны следующие варианты:
+
+\begin{enumerate}
+    \item У электрона достаточно энергии $ \longrightarrow $ происходит возбуждение
+    атомного электрона.
+    \item У электрона не достаточно энергии $ \longrightarrow $ электрон не меняет
+    свою энергию.
+\end{enumerate}
+
+Таким образом, на ВАХ трехэлектродной лампы (см рис. 1) будет наблюдаться ряд
+последовательных максимумов и минимумов. При этом, максимумы и минимумы будут
+отстоять друг от друга на равные расстояния $ \Delta V $. А $ \Delta V $ будет
+соответствовать энергии первого возбужденного состояния.

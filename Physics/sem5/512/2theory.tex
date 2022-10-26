@@ -1,0 +1,91 @@
+
+% Theory part goes here %
+
+% for numerated formulas
+\newcommand{\formula}[2]
+{
+    \begin{equation}\label{#1}
+        #2
+    \end{equation}
+}
+
+% for in-text math formulas
+\newcommand{\mth}[1]
+{
+    \begin{math}
+        #1
+    \end{math}
+}
+
+% for rus letters in indexes
+\newcommand{\ruB}[1]
+{
+    _{\text{#1}}
+}
+
+\newcounter{PicsCounter}
+\setcounter{PicsCounter}{1}
+
+\newcommand{\pic}[3]{
+    \begin{center}
+        \begin{minipage}[h!]{#1}
+            \begin{center}
+
+                \includegraphics[width = \textwidth]{#2}
+                \textit{Рис \arabic{PicsCounter}. #3}
+
+            \end{center}
+        \end{minipage}
+    \end{center}
+
+    \stepcounter{PicsCounter}
+}
+
+\newcounter{TablesCounter}
+\setcounter{TablesCounter}{1}
+
+\newcommand{\tableLable}[1]{
+    \textit{Таблица \arabic{TablesCounter}: #1}
+
+    \stepcounter{TablesCounter}
+}
+
+\section{Теория}
+
+При рассеянии $ \gamma $-кванта на электроне выполняется соотношение Комптона:
+
+\formula{ComptonEquation}
+{ \Delta\lambda = \lambda_1 - \lambda_0 = \frac{h}{mc}\left( 1 - \cos{\Theta} \right) }
+
+Где $ \lambda_0 \, $ и $ \lambda_1 \, $ - длинны волны $ \gamma $-кванта до и после
+рассеяния соответственно; $ \Theta $ - угол рассеяния  $ \gamma $-кванта. \\
+
+Формулу (\ref{ComptonEquation}) можно переписать в более удобном виде:
+
+\formula{TransformedComptonEquation}
+{ \frac{1}{\epsilon{\left( \Theta \right)}} - \frac{1}{\epsilon_0} = 1 - \cos{\Theta} }
+
+Где $ \epsilon_0 \, $ - начальная энергия $ \gamma $-кванта в единицах $ mc^2 $;
+$ \epsilon{\left( \Theta \right)} \, $ - энергия рассеянного $ \gamma $-кванта в единицах
+$ mc^2 $. \\
+
+Следует отметить, что формулы (\ref{ComptonEquation}) и (\ref{TransformedComptonEquation})
+применимы только для свободных электронов, что справедливо для легких атомов, для которых
+энергия связи мала в сравнении с энергией $ \gamma $-кванта. \\
+
+Формулу (\ref{TransformedComptonEquation}) можно переписать использовав соотношение
+$ \epsilon{\left( \Theta \right)} = AN{\left( \Theta \right)} \, $ :
+
+\formula{ChannelComptonEquation}
+{
+    \frac{1}{N{\left( \Theta \right)}} - \frac{1}{N{\left( 0 \right)}} =
+        A \left( 1 - \cos{\Theta} \right)
+}
+
+Тогда можно определить энергию покоя электрона:
+
+\formula{ElectronRestEnergy}
+{ mc^2 = E_\gamma \frac{N{\left( 90 \right)}} {N{\left( 0 \right)} - N{\left( 90 \right)}} }
+
+Где $ E_\gamma \, $ - энергия испускаемых источником $ \gamma $-квантов. \\
+$ E_\gamma = 662 $ кэВ
