@@ -5,3 +5,5 @@
 *.out
 *.fls
 .ipynb_checkpoints
+*.toc
+
