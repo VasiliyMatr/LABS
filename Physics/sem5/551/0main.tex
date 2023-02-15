@@ -32,6 +32,9 @@
 % for coll math
     \usepackage{amsmath}
 
+% extra symbols
+    \usepackage{amssymb}
+
 % path to all pictures
     \graphicspath{{picks/}}
 
@@ -69,22 +72,20 @@
 
 % lab num
     \newcommand{\labnum}{
-        3.3.4
+        5.5.1
     }
 
 % lab name
     \newcommand{\labname}{
-        Эффект Холла в полупроводниках
+        Измерение коэффициента ослабления потока $ \gamma $-лучей в веществе и определение
+        их энергии
     }
 
 % lab objective
     \newcommand{\labobj}{
-        Измерение подвижности и концентрации носителей заряда в полупроводниках и проводниках.
-    }
-
-% lab equipment
-    \newcommand{\labequ}{
-        Электромагнит с источником питания, амперметр, милливеберметр, реостат, источник питания, цифровой вольтметр, образцы легированного германия.
+        С помощью сцинтилляционного счётчика измерить линейные коэффициенты ослабления
+        потока $ \gamma $-лучей в свинце, железе и алюминии; по их величине определить энергию
+        $ \gamma $-квантов.
     }
 
 % ---------------- PAGES STYLE & FORMATTING ---------------- %
@@ -107,6 +108,9 @@
 
 % to have line breaks without sizes excess
     \tolerance = 10000
+
+% indents off
+    \setlength{\parindent}{0cm}
 
 % ---------------- DOC BODY ---------------- %
 

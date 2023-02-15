@@ -23,7 +23,7 @@
     \usepackage[labelsep=period]{caption}
 
 % for colored hyperrefs
-    \usepackage{xcolor}
+    \usepackage[dvipsnames]{xcolor}
     \usepackage{hyperref}
 
 % for pictures
@@ -67,25 +67,11 @@
     \end{minipage}
     }
 
-% lab num
-    \newcommand{\labnum}{
-        3.3.4
-    }
+% choosen question topic
+    \newcommand{\topic}{Фильтр Лио}
 
-% lab name
-    \newcommand{\labname}{
-        Эффект Холла в полупроводниках
-    }
-
-% lab objective
-    \newcommand{\labobj}{
-        Измерение подвижности и концентрации носителей заряда в полупроводниках и проводниках.
-    }
-
-% lab equipment
-    \newcommand{\labequ}{
-        Электромагнит с источником питания, амперметр, милливеберметр, реостат, источник питания, цифровой вольтметр, образцы легированного германия.
-    }
+% ToC title renaming
+    \renewcommand{\contentsname}{Содержание:}
 
 % ---------------- PAGES STYLE & FORMATTING ---------------- %
 
@@ -98,15 +84,24 @@
         \renewcommand{\footrulewidth}{0pt}
 
         % running titles contents
-        \fancyfoot[L]{\ifthenelse{\isodd{\thepage}}{Работа \labnum}{\thepage}}
-        \fancyfoot[R]{\ifthenelse{\isodd{\thepage}}{\thepage}{Работа \labnum}}
+        \fancyfoot[L]{\ifthenelse{\isodd{\thepage}}{\topic}{\thepage}}
+        \fancyfoot[R]{\ifthenelse{\isodd{\thepage}}{\thepage}{\topic}}
     }
 
 % choosing page style with our running titles
     \pagestyle{plain}
 
+% references setup
+    \hypersetup{
+        colorlinks=true,
+        linkcolor=MidnightBlue,
+    }
+
 % to have line breaks without sizes excess
     \tolerance = 10000
+
+% there are no indents in paragraphs begining
+    \setlength{\parindent}{0pt}
 
 % ---------------- DOC BODY ---------------- %
 
@@ -124,7 +119,7 @@
         \headsep = 1.2cm
 
     % other files includes
-        \include{2theory}
-        \include{3experement}
+        \include{2WoodsFilter}
+        \include{3LyotsFilter}
 
 \end{document}
