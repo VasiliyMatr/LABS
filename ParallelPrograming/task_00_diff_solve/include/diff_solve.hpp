@@ -6,6 +6,9 @@
 
 #include <iostream>
 
+#ifndef DIFF_SOLVE_HPP_INCL
+#define DIFF_SOLVE_HPP_INCL
+
 namespace diff_compute {
 
 using Float = double;
@@ -232,3 +235,5 @@ public:
 };
 
 } // namespace diff_compute
+
+#endif // #ifndef DIFF_SOLVE_HPP_INCL

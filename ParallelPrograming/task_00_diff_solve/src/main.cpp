@@ -1,35 +1,11 @@
+#include <cstdlib>
 
-#include <fstream>
-#include <iostream>
-#include <mpi.h>
-#include <numbers>
-
-#include <diff_solve.hpp>
+#include <MPI_trans_eq.hpp>
 
 using diff_compute::Float;
 
-class FuncT {
-  const int m_rank;
-
-  int m_row_idx = 1;
-
-  Float func(Float t) const noexcept { return std::cos(t / 3); }
-
-public:
-  FuncT(int rank) : m_rank(rank) {}
-
-  Float operator()(Float t) noexcept {
-    if (m_rank == 0) {
-      return func(t);
-    }
-
-    Float value = std::nan("");
-
-    MPI_Recv(&value, 1, MPI_DOUBLE, m_rank - 1, m_row_idx++, MPI_COMM_WORLD,
-             MPI_STATUS_IGNORE);
-
-    return value;
-  }
+struct FuncT {
+  Float operator()(Float t) const noexcept { return std::cos(t / 3); }
 };
 
 struct FuncX {
@@ -42,36 +18,18 @@ struct FuncF {
   }
 };
 
-class RowHandler {
-  const int m_commsize;
-  const int m_dest_rank;
+static constexpr size_t BUFF_SIZE = 32;
 
-  int row_idx = 1;
+using Solver = MPI_trans_eq::TransEqSolver<FuncT, FuncX, FuncF, BUFF_SIZE>;
+using MPI_FuncT = MPI_trans_eq::FuncT<FuncT, BUFF_SIZE>;
+using MPI_RowHandler = MPI_trans_eq::RowHandler<BUFF_SIZE>;
 
-public:
-  RowHandler(int commsize, int rank)
-      : m_commsize(commsize), m_dest_rank(rank + 1) {}
-
-  void operator()(Float value) noexcept {
-    if (m_commsize == 1 || m_dest_rank == m_commsize) {
-      return;
-    }
-
-    MPI_Send((void *)&value, 1, MPI_DOUBLE, m_dest_rank, row_idx++,
-             MPI_COMM_WORLD);
+void assert_with_msg(bool cond, const char *msg, int exit_code = -1) {
+  if (!cond) {
+    std::cout << msg << std::endl;
+    exit(exit_code);
   }
-};
-
-diff_compute::FloatRange
-compute_rank_x_range(diff_compute::FloatRange total_range, int commsize,
-                     int rank) {
-  Float step = total_range.len() / commsize;
-
-  return {total_range.min() + step * rank,
-          total_range.min() + step * (rank + 1)};
 }
-
-using Solver = diff_compute::TransEqSolver<FuncT, FuncX, FuncF, RowHandler>;
 
 int main(int argc, char **argv) {
   int commsize = 0;
@@ -83,60 +41,60 @@ int main(int argc, char **argv) {
 
   diff_compute::FloatRange t_range(0., 5);
   diff_compute::FloatRange total_x_range(0., 5);
-  Float dt = 0.005;
-  Float dx = 0.005;
 
-  diff_compute::FloatRange x_range =
-      compute_rank_x_range(total_x_range, commsize, my_rank);
+  bool need_dump = argc == 4;
 
-  // std::cout << "Rank " << my_rank << " computes for x = [" << x_range.min()
-  //           << ", " << x_range.max() << "]" << std::endl;
+  assert_with_msg(argc == 3 || need_dump, "Invalid arguments");
+
+  Float dt = std::atof(argv[1]);
+  Float dx = std::atof(argv[2]);
+
+  assert_with_msg(dt != 0 && dx != 0, "Invalid arguments");
+
+  auto x_range =
+      MPI_trans_eq::compute_rank_x_range(total_x_range, commsize, my_rank);
+
+  std::cout << "Rank " << my_rank << " computes for x = [" << x_range.min()
+            << ", " << x_range.max() << "]" << std::endl;
 
   Solver::SolGridShape sol_grid_shape(t_range, x_range, dt, dx);
 
-  Solver::TransEqFuncs funcs{FuncT{my_rank}, FuncX{}, FuncF{}};
-  RowHandler row_handler(commsize, my_rank);
+  Solver::TransEqFuncs funcs{MPI_FuncT{my_rank}, FuncX{}, FuncF{}};
+  MPI_RowHandler row_handler{commsize, my_rank, sol_grid_shape.t_size()};
 
-  auto sol = Solver(sol_grid_shape, funcs, row_handler).solve();
+  auto grid = Solver(sol_grid_shape, funcs, row_handler).solve();
 
   if (my_rank != 0) {
-    int sol_size = sol.size();
+    int grid_size = grid.size();
 
-    // Send size and data
-    MPI_Send((void *)&sol_size, 1, MPI_INT, 0, 1, MPI_COMM_WORLD);
-    MPI_Send((void *)sol.data(), sol.size(), MPI_DOUBLE, 0, 2,
-             MPI_COMM_WORLD);
+    // Send grid size and data
+    MPI_Send((void *)&grid_size, 1, MPI_INT, 0, 1, MPI_COMM_WORLD);
+    MPI_Send((void *)grid.data(), grid_size, MPI_DOUBLE, 0, 2, MPI_COMM_WORLD);
 
     MPI_Finalize();
     return 0;
   }
 
-  std::vector<std::vector<Float>> sols = {std::move(sol)};
+  std::vector<std::vector<Float>> grids = {std::move(grid)};
 
   for (int i = 1; i != commsize; ++i) {
-    int sol_i_size = 0;
+    int grid_i_size = 0;
 
-    MPI_Recv(&sol_i_size, 1, MPI_INT, i, 1, MPI_COMM_WORLD,
+    MPI_Recv(&grid_i_size, 1, MPI_INT, i, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+    std::vector<Float> grid_i(grid_i_size, Float{0});
+
+    MPI_Recv(grid_i.data(), grid_i_size, MPI_DOUBLE, i, 2, MPI_COMM_WORLD,
              MPI_STATUS_IGNORE);
 
-    std::vector<Float> sol_i(sol_i_size, Float{0});
-
-    MPI_Recv(sol_i.data(), sol_i_size, MPI_DOUBLE, i, 2,
-             MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
-    sols.emplace_back(std::move(sol_i));
+    grids.emplace_back(std::move(grid_i));
   }
 
-  size_t t_size = sol_grid_shape.t_size();
-
-  for (size_t t_idx = 0; t_idx != t_size; ++t_idx) {
-    for (auto &&sol : sols) {
-      size_t x_size = sol.size() / t_size;
-      for (size_t x_idx = 0; x_idx != x_size; ++x_idx) {
-        std::cout << sol[t_idx * x_size + x_idx] << " ";
-      }
-      std::cout << std::endl;
-    }
+  if (need_dump) {
+    std::ofstream out;
+    out.open(argv[3]);
+    assert_with_msg(out.is_open(), "Can not open output file");
+    MPI_trans_eq::dump_grids(out, grids, sol_grid_shape.t_size());
   }
 
   MPI_Finalize();
