@@ -55,8 +55,8 @@ int main() {
         ThreadJob(last_begin, last_end, threads_dests[last_idx]));
   }
 
-  for (size_t th_idx = 0; th_idx != jobs_num; ++th_idx) {
-    threads[th_idx].join();
+  for (auto &&th : threads) {
+    th.join();
   }
 
   double total_sum = 0;

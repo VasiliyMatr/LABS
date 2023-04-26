@@ -1,22 +1,24 @@
 
 #include <vector>
 
-#include <thread>
 #include <iostream>
+#include <mutex>
 #include <sstream>
+#include <thread>
 
 class ThreadJob {
-  const size_t m_job_idx;
+  static std::mutex m_mutex;
+  static int m_value;
 
 public:
-  ThreadJob(size_t job_idx) : m_job_idx(job_idx) {}
-
   void operator()() {
-    std::stringstream msg;
-    msg << "Job with idx " << m_job_idx << " executed" << std::endl;
-    std::cout << msg.str();
+    std::lock_guard<std::mutex> guard(m_mutex);
+    std::cout << "Job uses value " << m_value++ << std::endl;
   }
 };
+
+std::mutex ThreadJob::m_mutex{};
+int ThreadJob::m_value = 0;
 
 int main() {
   size_t jobs_num = 0;
@@ -30,7 +32,7 @@ int main() {
   std::vector<std::thread> threads{};
 
   for (size_t job_idx = 0; job_idx != jobs_num; ++job_idx) {
-    threads.emplace_back(ThreadJob(job_idx));
+    threads.emplace_back(ThreadJob{});
   }
 
   for (auto &&th : threads) {
