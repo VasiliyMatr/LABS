@@ -1,4 +1,5 @@
 #include <array>
+#include <cassert>
 #include <cmath>
 #include <cstring>
 #include <fstream>
@@ -14,102 +15,123 @@
 static constexpr size_t IDIST = 4;
 static constexpr size_t JDIST = 2;
 
-// Calculate initial job bounds
-auto calc_job_bounds(int commsize, int rank) {
-  bool is_last_job = rank == commsize - 1;
+class JobConfig final {
+  size_t m_commsize = 0;
+  size_t m_rank = 0;
 
-  size_t job_step = JSIZE / (commsize - 1);
-  size_t job_begin = (rank - 1) * job_step;
-  size_t job_end = is_last_job ? JSIZE : job_begin + job_step;
+  bool m_is_last_job = m_rank == m_commsize - 1;
 
-  return std::make_pair(job_begin, job_end);
+  size_t m_j_step = (JSIZE - JDIST) / m_commsize;
+  size_t m_j_begin = m_rank * m_j_step;
+  size_t m_j_end = m_is_last_job ? JSIZE - JDIST : m_j_begin + m_j_step;
+
+public:
+  JobConfig(int commsize, int rank) : m_commsize(commsize), m_rank(rank) {
+    assert(commsize > 0);
+    assert(rank >= 0);
+    assert(commsize > rank);
+    assert(m_j_step >= JDIST * 2);
+  }
+
+  auto commsize() const { return m_commsize; }
+  auto rank() const { return m_rank; }
+  auto is_last_job() const { return m_is_last_job; }
+  auto j_begin() const { return m_j_begin; }
+  auto j_end() const { return m_j_end; }
+  auto j_size() const { return m_j_end - m_j_begin; }
+};
+
+int dep_tag(size_t i) { return i; }
+
+int collect_tag(size_t i) { return i + ISIZE; }
+
+void calculate(JobConfig &cfg) {
+  std::vector<MPI_Request> collect_requests{};
+  if (cfg.rank() != 0) {
+    collect_requests.reserve(ISIZE - IDIST);
+  }
+
+  size_t job_deps_num = ISIZE - IDIST * 2;
+
+  std::vector<MPI_Request> prev_deps_requests{};
+  if (cfg.rank() != 0) {
+    prev_deps_requests.reserve(job_deps_num);
+  }
+
+  std::vector<MPI_Request> job_deps_requests{};
+  if (!cfg.is_last_job()) {
+    job_deps_requests.reserve(job_deps_num);
+
+    for (size_t i = IDIST * 2; i != ISIZE; ++i) {
+      MPI_Request r = MPI_REQUEST_NULL;
+      MPI_Irecv(a[i - IDIST] + cfg.j_end(), JDIST, MPI_DOUBLE, cfg.rank() + 1,
+                dep_tag(i), MPI_COMM_WORLD, &r);
+      job_deps_requests.push_back(r);
+    }
+  }
+
+  for (size_t i = IDIST; i != ISIZE; ++i) {
+    auto j = cfg.j_begin();
+
+    for (size_t end = j + JDIST; j != end; ++j) {
+      a[i][j] = f(a[i - IDIST][j + JDIST]);
+    }
+
+    if (cfg.rank() != 0 && i < ISIZE - IDIST) {
+      MPI_Request r = MPI_REQUEST_NULL;
+      MPI_Isend(a[i] + cfg.j_begin(), JDIST, MPI_DOUBLE, cfg.rank() - 1,
+                dep_tag(i + IDIST), MPI_COMM_WORLD, &r);
+
+      prev_deps_requests.push_back(r);
+    }
+
+    // if (!cfg.is_last_job() && i >= IDIST * 2) {
+    //   MPI_Wait(&job_deps_requests[i - IDIST * 2], MPI_STATUS_IGNORE);
+    // }
+
+    for (size_t end = cfg.j_end(); j != end; ++j) {
+      a[i][j] = f(a[i - IDIST][j + JDIST]);
+    }
+
+    if (cfg.rank() != 0) {
+      MPI_Request r = MPI_REQUEST_NULL;
+      MPI_Isend(a[i] + cfg.j_begin(), cfg.j_size(), MPI_DOUBLE, 0,
+                collect_tag(i), MPI_COMM_WORLD, &r);
+      collect_requests.push_back(r);
+    }
+
+    if (!cfg.is_last_job() && i % IDIST == IDIST - 1 && i != ISIZE - 1) {
+      MPI_Waitall(IDIST, &job_deps_requests[i + 1 - IDIST * 2],
+                  MPI_STATUS_IGNORE);
+    }
+  }
+
+  MPI_Waitall(collect_requests.size(), collect_requests.data(),
+              MPI_STATUS_IGNORE);
+  MPI_Waitall(prev_deps_requests.size(), prev_deps_requests.data(),
+              MPI_STATUS_IGNORE);
 }
 
-// Collect all results
-void collect(int commsize) {
-  std::vector<MPI_Request> requests(commsize - 1, MPI_REQUEST_NULL);
+std::vector<MPI_Request> collect_jobs(JobConfig &cfg) {
+  auto commsize = cfg.commsize();
 
-  int copy_end = -1;
+  assert(cfg.rank() == 0);
 
-  for (size_t i = IDIST, offset = JDIST; i < ISIZE; ++i) {
-    for (int rank = 1; rank != commsize; ++rank) {
-      auto [job_begin, job_end] = calc_job_bounds(commsize, rank);
-      size_t job_size = job_end - job_begin;
+  std::vector<MPI_Request> collect_requests{};
+  collect_requests.reserve((ISIZE - IDIST) * (commsize - 1));
 
-      size_t shifted_begin = (job_begin - offset + JSIZE) % JSIZE;
+  for (size_t rank = 1; rank != commsize; ++rank) {
+    JobConfig rank_cfg(commsize, rank);
 
-      MPI_Irecv(a[i] + shifted_begin, job_size, MPI_DOUBLE, rank, i,
-                MPI_COMM_WORLD, &requests[rank - 1]);
-
-      if (shifted_begin + job_size > JSIZE) {
-        copy_end = shifted_begin + job_size - JSIZE;
-      }
-    }
-
-    for (auto &&request : requests) {
-      MPI_Wait(&request, MPI_STATUS_IGNORE);
-    }
-
-    for (int j = 0; j < copy_end; ++j) {
-      a[i][j] = a[i + 1][j];
-    }
-
-    copy_end = -1;
-    if (i % IDIST == IDIST - 1) {
-      offset += JDIST;
+    for (size_t i = IDIST; i != ISIZE; ++i) {
+      MPI_Request r = MPI_REQUEST_NULL;
+      MPI_Irecv(a[i] + rank_cfg.j_begin(), rank_cfg.j_size(), MPI_DOUBLE, rank,
+                collect_tag(i), MPI_COMM_WORLD, &r);
+      collect_requests.push_back(r);
     }
   }
-}
 
-// Compute my job
-void compute(int commsize, int my_rank) {
-  auto [job_begin, job_end] = calc_job_bounds(commsize, my_rank);
-  size_t job_size = job_end - job_begin;
-
-  std::array<std::vector<double>, ISIZE> data{};
-  std::array<MPI_Request, IDIST> requests{};
-
-  // Init start data
-  for (auto &&idata : data) {
-    idata.reserve(job_size);
-  }
-
-  for (size_t i = 0; i != IDIST; ++i) {
-    for (size_t j = job_begin; j != job_end; ++j) {
-      data[i].push_back(a[i][j]);
-    }
-
-    requests[i] = MPI_REQUEST_NULL;
-  }
-
-  // Compute and send
-  for (size_t i = IDIST, offset = JDIST; i != ISIZE; ++i) {
-    size_t imod = i % IDIST;
-    auto &&idata = data[imod];
-
-    for (size_t j = 0; j != job_size; ++j) {
-      size_t shifted_j = (job_begin + j + JSIZE - offset) % JSIZE;
-
-      if (shifted_j >= JSIZE - JDIST) {
-        idata[j] = a[i][shifted_j];
-      } else {
-        idata[j] = f(idata[j]);
-      }
-    }
-
-    MPI_Isend(idata.data(), idata.size(), MPI_DOUBLE, 0, i, MPI_COMM_WORLD,
-              &requests[imod]);
-
-    if (imod == IDIST - 1) {
-      // Increment offset
-      offset += JDIST;
-
-      // Wait for all requests
-      for (auto &&request : requests) {
-        MPI_Wait(&request, MPI_STATUS_IGNORE);
-      }
-    }
-  }
+  return collect_requests;
 }
 
 int main(int argc, char **argv) {
@@ -122,17 +144,23 @@ int main(int argc, char **argv) {
 
   init_a();
 
+  JobConfig cfg(commsize, my_rank);
+
   // Workload
   // D = (-4, 2) => d = ('>', '<')
   if (my_rank != 0) {
-    compute(commsize, my_rank);
+    calculate(cfg);
 
     MPI_Finalize();
     return 0;
   }
 
   auto start = MPI_Wtime();
-  collect(commsize);
+  auto collect_requests = collect_jobs(cfg);
+  calculate(cfg);
+
+  MPI_Waitall(collect_requests.size(), collect_requests.data(),
+              MPI_STATUS_IGNORE);
   auto end = MPI_Wtime();
 
   std::cout << "Workload time: " << end - start << std::endl;

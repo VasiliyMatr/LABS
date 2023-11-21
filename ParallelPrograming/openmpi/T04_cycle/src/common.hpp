@@ -7,10 +7,10 @@
 #include <fstream>
 #include <thread>
 
-static constexpr size_t ISIZE = 5000;
-static constexpr size_t JSIZE = 5000;
+static constexpr size_t ISIZE = 1000;
+static constexpr size_t JSIZE = 1000;
 
-static double a[ISIZE + 1][JSIZE];
+static double a[ISIZE][JSIZE];
 
 static void init_a() {
   for (size_t i = 0; i != ISIZE; ++i) {
@@ -33,7 +33,7 @@ static void dump_a([[maybe_unused]] const char *dump_file_name) {
 }
 
 static double f(double x) {
-//   std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  // std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
   return std::sin(6 * x);
 }
