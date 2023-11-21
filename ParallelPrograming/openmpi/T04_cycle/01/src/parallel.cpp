@@ -4,6 +4,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <unistd.h>
 #include <utility>
 #include <vector>
@@ -31,6 +32,7 @@ public:
     assert(rank >= 0);
     assert(commsize > rank);
     assert(m_j_step >= JDIST * 2);
+    assert(ISIZE % IDIST == 0);
   }
 
   auto commsize() const { return m_commsize; }
@@ -51,58 +53,65 @@ void calculate(JobConfig &cfg) {
     collect_requests.reserve(ISIZE - IDIST);
   }
 
-  size_t job_deps_num = ISIZE - IDIST * 2;
+  size_t job_deps_num = ISIZE / IDIST;
 
   std::vector<MPI_Request> prev_deps_requests{};
+  std::vector<std::array<double, JDIST * IDIST>> prev_deps_buff{};
   if (cfg.rank() != 0) {
     prev_deps_requests.reserve(job_deps_num);
+    prev_deps_buff.resize(job_deps_num);
   }
 
   std::vector<MPI_Request> job_deps_requests{};
+  std::vector<std::array<double, JDIST * IDIST>> job_deps_buff{};
   if (!cfg.is_last_job()) {
     job_deps_requests.reserve(job_deps_num);
+    job_deps_buff.resize(job_deps_num);
 
-    for (size_t i = IDIST * 2; i != ISIZE; ++i) {
+    for (size_t i = IDIST * 2; i != ISIZE; i += IDIST) {
       MPI_Request r = MPI_REQUEST_NULL;
-      MPI_Irecv(a[i - IDIST] + cfg.j_end(), JDIST, MPI_DOUBLE, cfg.rank() + 1,
-                dep_tag(i), MPI_COMM_WORLD, &r);
+      MPI_Irecv(job_deps_buff[i / IDIST].data(), JDIST * IDIST, MPI_DOUBLE,
+                cfg.rank() + 1, dep_tag(i), MPI_COMM_WORLD, &r);
       job_deps_requests.push_back(r);
     }
   }
 
-  for (size_t i = IDIST; i != ISIZE; ++i) {
-    auto j = cfg.j_begin();
+  for (size_t i = IDIST; i != ISIZE;) {
+    for (size_t k = 0; k != IDIST; ++i, ++k) {
+      if (!cfg.is_last_job() && i >= IDIST * 2) {
+        std::memcpy(&a[i - IDIST][cfg.j_end()],
+                    &job_deps_buff[i / IDIST][k * JDIST],
+                    JDIST * sizeof(double));
+      }
 
-    for (size_t end = j + JDIST; j != end; ++j) {
-      a[i][j] = f(a[i - IDIST][j + JDIST]);
+      for (size_t j = cfg.j_begin(), end = cfg.j_end(); j != end; ++j) {
+        a[i][j] = f(a[i - IDIST][j + JDIST]);
+      }
+
+      if (cfg.rank() != 0) {
+        std::memcpy(&prev_deps_buff[i / IDIST][k * JDIST], &a[i][cfg.j_begin()],
+                    JDIST * sizeof(double));
+
+        MPI_Request r = MPI_REQUEST_NULL;
+        MPI_Isend(a[i] + cfg.j_begin(), cfg.j_size(), MPI_DOUBLE, 0,
+                  collect_tag(i), MPI_COMM_WORLD, &r);
+
+        collect_requests.push_back(r);
+      }
     }
 
-    if (cfg.rank() != 0 && i < ISIZE - IDIST) {
+    if (cfg.rank() != 0 && i != ISIZE) {
       MPI_Request r = MPI_REQUEST_NULL;
-      MPI_Isend(a[i] + cfg.j_begin(), JDIST, MPI_DOUBLE, cfg.rank() - 1,
-                dep_tag(i + IDIST), MPI_COMM_WORLD, &r);
+      MPI_Isend(prev_deps_buff[i / IDIST - 1].data(), IDIST * JDIST, MPI_DOUBLE,
+                cfg.rank() - 1, dep_tag(i), MPI_COMM_WORLD, &r);
 
       prev_deps_requests.push_back(r);
     }
 
-    // if (!cfg.is_last_job() && i >= IDIST * 2) {
-    //   MPI_Wait(&job_deps_requests[i - IDIST * 2], MPI_STATUS_IGNORE);
-    // }
-
-    for (size_t end = cfg.j_end(); j != end; ++j) {
-      a[i][j] = f(a[i - IDIST][j + JDIST]);
-    }
-
-    if (cfg.rank() != 0) {
-      MPI_Request r = MPI_REQUEST_NULL;
-      MPI_Isend(a[i] + cfg.j_begin(), cfg.j_size(), MPI_DOUBLE, 0,
-                collect_tag(i), MPI_COMM_WORLD, &r);
-      collect_requests.push_back(r);
-    }
-
-    if (!cfg.is_last_job() && i % IDIST == IDIST - 1 && i != ISIZE - 1) {
-      MPI_Waitall(IDIST, &job_deps_requests[i + 1 - IDIST * 2],
-                  MPI_STATUS_IGNORE);
+    if (i != ISIZE) {
+      if (!cfg.is_last_job()) {
+        MPI_Wait(&job_deps_requests[i / IDIST - 2], MPI_STATUS_IGNORE);
+      }
     }
   }
 

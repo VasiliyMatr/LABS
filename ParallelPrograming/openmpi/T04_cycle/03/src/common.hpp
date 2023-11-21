@@ -7,8 +7,8 @@
 #include <fstream>
 #include <thread>
 
-static constexpr size_t ISIZE = 10000;
-static constexpr size_t JSIZE = 10000;
+static constexpr size_t ISIZE = 1000;
+static constexpr size_t JSIZE = 1000;
 
 static double a[ISIZE][JSIZE];
 static double b[ISIZE][JSIZE];
