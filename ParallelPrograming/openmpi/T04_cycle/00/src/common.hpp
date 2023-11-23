@@ -11,23 +11,21 @@ static constexpr size_t ISIZE = 0x1000;
 static constexpr size_t JSIZE = 0x1000;
 
 static double a[ISIZE][JSIZE];
-static double b[ISIZE][JSIZE];
 
-static void init_ab() {
+static void init_a() {
   for (size_t i = 0; i != ISIZE; ++i) {
     for (size_t j = 0; j != JSIZE; ++j) {
       a[i][j] = 10 * i + j;
-      b[i][j] = 0;
     }
   }
 }
 
-static void dump_b([[maybe_unused]] const char *dump_file_name) {
+static void dump_a([[maybe_unused]] const char *dump_file_name) {
 #if 0
   std::ofstream out{dump_file_name};
   for (size_t i = 0; i != ISIZE; ++i) {
     for (size_t j = 0; j != JSIZE; ++j) {
-      out << b[i][j] << " ";
+      out << a[i][j] << " ";
     }
     out << std::endl;
   }
@@ -37,13 +35,7 @@ static void dump_b([[maybe_unused]] const char *dump_file_name) {
 static double a_f(double x) {
   // std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-  return std::sin(0.1 * x);
-}
-
-static double b_f(double x) {
-  // std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
-  return x * 1.5;
+  return std::sin(2 * x);
 }
 
 #endif // COMMON_HPP
